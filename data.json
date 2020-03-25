@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Grandmother",
+    "class": "woman",
+    "textClass": "emphasis",
+    "marriages": [
+      {
+        "spouse": {
+          "name": "Grandfather",
+          "class": "man",
+          "extra": {
+            "nickname": "Illi"
+          }
+        },
+        "children": [
+          {
+            "name": "Mother",
+            "class": "woman",
+            "marriages": [
+              {
+                "spouse": {
+                  "name": "Father",
+                  "class": "man"
+                },
+                "children": [
+                  {
+                    "name": "Patient Node",
+                    "class": "woman"
+                  }
+                ]
+              }
+            ]
+          }, {
+            "name": "Aunt",
+            "class": "woman"
+          }, {
+            "name": "Uncle",
+            "class": "man"
+          }
+        ]
+      }
+    ],
+    "extra": {
+      "profileImg": "some profile link here",
+      "hasBRCA": true,
+      "BRCATest": {
+        "date": "2020-03-07",
+        "result": "negative"
+      }
+    }
+  }
+]
