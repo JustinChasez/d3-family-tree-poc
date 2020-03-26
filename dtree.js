@@ -241,7 +241,7 @@ class TreeBuilder {
             container.innerHTML = text;
 
             tmpSvg.appendChild(container);
-            let height = container.offsetHeight;
+            let height = 100; // container.offsetHeight;
             tmpSvg.removeChild(container);
 
             maxHeight = Math.max(maxHeight, height);
@@ -369,9 +369,11 @@ const dTree = {
             dTree._sortPersons(person.children, opts);
 
             // add "direct" children
-            person.children.forEach((child) => {
-                reconstructTree(child, node);
-            });
+            if (person.children) {
+                person.children.forEach((child) => {
+                    reconstructTree(child, node);
+                });
+            }
 
             parent.children.push(node);
 
@@ -379,49 +381,50 @@ const dTree = {
             dTree._sortMarriages(person.marriages, opts);
 
             // go through marriage
-            person.marriages.forEach((marriage, index) => {
 
-                const m = {
-                    name: '',
-                    id: id++,
-                    hidden: true,
-                    noParent: true,
-                    children: [],
-                    extra: marriage.extra
-                };
+            if (person.marriages) {
+                person.marriages.forEach((marriage, index) => {
+                    const m = {
+                        name: '',
+                        id: id++,
+                        hidden: true,
+                        noParent: true,
+                        children: [],
+                        extra: marriage.extra
+                    };
 
-                const sp = marriage.spouse;
+                    const sp = marriage.spouse;
 
-                const spouse = {
-                    name: sp.name,
-                    id: id++,
-                    hidden: false,
-                    noParent: true,
-                    children: [],
-                    textClass: sp.textClass ? sp.textClass : opts.styles.text,
-                    class: sp.class ? sp.class : opts.styles.node,
-                    extra: sp.extra,
-                    marriageNode: m
-                };
+                    const spouse = {
+                        name: sp.name,
+                        id: id++,
+                        hidden: false,
+                        noParent: true,
+                        children: [],
+                        textClass: sp.textClass ? sp.textClass : opts.styles.text,
+                        class: sp.class ? sp.class : opts.styles.node,
+                        extra: sp.extra,
+                        marriageNode: m
+                    };
 
-                parent.children.push(m, spouse);
+                    parent.children.push(m, spouse);
 
-                dTree._sortPersons(marriage.children, opts);
-                marriage.children.forEach((child) => {
-                    reconstructTree(child, m);
+                    dTree._sortPersons(marriage.children, opts);
+                    marriage.children.forEach((child) => {
+                        reconstructTree(child, m);
+                    });
+
+                    siblings.push({
+                        source: {
+                            id: node.id
+                        },
+                        target: {
+                            id: spouse.id
+                        },
+                        number: index
+                    });
                 });
-
-                siblings.push({
-                    source: {
-                        id: node.id
-                    },
-                    target: {
-                        id: spouse.id
-                    },
-                    number: index
-                });
-            });
-
+            }
         };
 
         data.forEach((person) => {

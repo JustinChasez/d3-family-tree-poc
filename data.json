@@ -26,16 +26,68 @@
                   {
                     "name": "Patient Node",
                     "class": "woman"
+                  },
+                  {
+                    "name": "Patient Siblings",
+                    "class": "woman"
+                  },
+                  {
+                    "name": "Patient Siblings",
+                    "class": "woman"
                   }
                 ]
               }
             ]
           }, {
             "name": "Aunt",
-            "class": "woman"
+            "class": "woman",
+            "marriages": [
+              {
+                "spouse": {
+                  "name": "Aunt's Husband",
+                  "class": "man"
+                },
+                "children": [
+                  {
+                    "name": "Patient's cousin",
+                    "class": "woman"
+                  },
+                  {
+                    "name": "Patient's cousin 6",
+                    "class": "woman"
+                  }
+                ]
+              }
+            ]
           }, {
-            "name": "Uncle",
-            "class": "man"
+            "name": "Aunt 2",
+            "class": "woman",
+            "marriages": [
+              {
+                "spouse": {
+                  "name": "Aunt 2's Husband",
+                  "class": "man"
+                },
+                "children": [
+                  {
+                    "name": "Patient's cousin 2",
+                    "class": "woman"
+                  },
+                  {
+                    "name": "Patient's cousin 3",
+                    "class": "woman"
+                  },
+                  {
+                    "name": "Patient's cousin 4",
+                    "class": "woman"
+                  },
+                  {
+                    "name": "Patient's cousin 5",
+                    "class": "woman"
+                  }
+                ]
+              }
+            ]
           }
         ]
       }
