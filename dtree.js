@@ -10,14 +10,12 @@ class TreeBuilder {
         this.allNodes = this._flatten(this.root);
 
         // Calculate node size
-        let visibleNodes = _.filter(this.allNodes, function (n) {
-            return !n.hidden;
-        });
+        let visibleNodes = this.allNodes.filter((n) => !n.hidden);
+
         this.nodeSize = opts.callbacks.nodeSize(visibleNodes, opts.nodeWidth, opts.callbacks.textRenderer);
     }
 
     create() {
-
         let opts = this.opts;
         let allNodes = this.allNodes;
         let nodeSize = this.nodeSize;
@@ -25,12 +23,19 @@ class TreeBuilder {
         let width = opts.width + opts.margin.left + opts.margin.right;
         let height = opts.height + opts.margin.top + opts.margin.bottom;
 
-        let zoom = d3.zoom().scaleExtent([0.1, 10]).on('zoom', function () {
-            svg.attr('transform', d3.event.transform.translate(width / 2, opts.margin.top));
-        });
+        let zoom = d3.zoom()
+            .scaleExtent([0.1, 10])
+            .on('zoom', function () {
+                svg.attr('transform', d3.event.transform.translate(width / 2, opts.margin.top));
+            });
 
         //make an SVG
-        let svg = this.svg = d3.select(opts.target).append('svg').attr('width', width).attr('height', height).call(zoom).append('g').attr('transform', 'translate(' + width / 2 + ',' + opts.margin.top + ')');
+        let svg = this.svg = d3.select(opts.target)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .call(zoom).append('g')
+            .attr('transform', 'translate(' + width / 2 + ',' + opts.margin.top + ')');
 
         // Compute the layout.
         this.tree = d3.tree().nodeSize([nodeSize[0] * 2, opts.callbacks.nodeHeightSeperation(nodeSize[0], nodeSize[1])]);
@@ -44,7 +49,6 @@ class TreeBuilder {
         });
 
         this._update(this.root);
-
     }
 
     _update(source) {
@@ -61,7 +65,10 @@ class TreeBuilder {
             // filter links with no parents to prevent empty nodes
             .filter(function (l) {
                 return !l.target.data.noParent;
-            }).append('path').attr('class', opts.styles.linage).attr('d', this._elbow);
+            })
+            .append('path')
+            .attr('class', opts.styles.linage)
+            .attr('d', this._elbow);
 
         let nodes = this.svg.selectAll('.node').data(treenodes.descendants()).enter();
 
@@ -96,7 +103,16 @@ class TreeBuilder {
             })
             .html(function (d) {
                 return opts.callbacks.nodeRenderer(
-                    d.data.name, d.x, d.y, nodeSize[0], nodeSize[1], d.data.extra, d.data.id, d.data.class, d.data.textClass, opts.callbacks.textRenderer);
+                    d.data,
+                    d.data.name,
+                    d.x, d.y,
+                    nodeSize[0],
+                    nodeSize[1],
+                    d.data.extra,
+                    d.data.id,
+                    d.data.class,
+                    d.data.textClass,
+                    opts.callbacks.textRenderer);
             })
             .on('click', function (d) {
                 if (d.data.hidden) {
@@ -121,6 +137,7 @@ class TreeBuilder {
             if (node.children) {
                 node.children.forEach(recurse);
             }
+
             if (!node.id) {
                 node.id = ++i;
             }
@@ -128,6 +145,7 @@ class TreeBuilder {
         }
 
         recurse(root);
+        console.log('flattened root: ', _.cloneDeep(n));
         return n;
     }
 
@@ -148,34 +166,32 @@ class TreeBuilder {
             y: d.source.y
         }];
 
-        let fun = d3.line().curve(d3.curveStepAfter).x(function (d) {
-            return d.x;
-        }).y(function (d) {
-            return d.y;
-        });
+        let fun = d3.line().curve(d3.curveStepAfter)
+            .x(function (d) {
+                return d.x;
+            })
+            .y(function (d) {
+                return d.y;
+            });
         return fun(linedata);
     }
 
     _linkSiblings() {
-
         let allNodes = this.allNodes;
 
-        _.forEach(this.siblings, function (d) {
-            let start = allNodes.filter(function (v) {
-                return d.source.id === v.data.id;
-            });
-            let end = allNodes.filter(function (v) {
-                return d.target.id === v.data.id;
-            });
+        this.siblings.forEach((d) => {
+            let start = allNodes.filter((v) => d.source.id === v.data.id);
+            let end = allNodes.filter((v) => d.target.id === v.data.id);
+
             d.source.x = start[0].x;
             d.source.y = start[0].y;
             d.target.x = end[0].x;
             d.target.y = end[0].y;
 
             let marriageId = (start[0].data.marriageNode != null ? start[0].data.marriageNode.id : end[0].data.marriageNode.id);
-            let marriageNode = allNodes.find(function (n) {
-                return n.data.id === marriageId;
-            });
+
+            let marriageNode = allNodes.find((n) => n.data.id === marriageId);
+
             d.source.marriageNode = marriageNode;
             d.target.marriageNode = marriageNode;
         });
@@ -183,7 +199,6 @@ class TreeBuilder {
     }
 
     _siblingLine(d, i) {
-
         let ny = Math.round(d.target.y + (d.source.y - d.target.y) * 0.50);
         let nodeWidth = this.nodeSize[0];
         let nodeHeight = this.nodeSize[1];
@@ -213,11 +228,13 @@ class TreeBuilder {
             y: d.target.y
         }];
 
-        let fun = d3.line().curve(d3.curveStepAfter).x(function (d) {
-            return d.x;
-        }).y(function (d) {
-            return d.y;
-        });
+        let fun = d3.line().curve(d3.curveStepAfter)
+            .x(function (d) {
+                return d.x;
+            })
+            .y(function (d) {
+                return d.y;
+            });
         return fun(linedata);
     }
 
@@ -237,7 +254,7 @@ class TreeBuilder {
             container.style.visibility = 'hidden';
             container.style.maxWidth = width + 'px';
 
-            let text = textRenderer(n.data.name, n.data.extra, n.data.textClass);
+            let text = textRenderer(n.data, n.data.name, n.data.extra, n.data.textClass);
             container.innerHTML = text;
 
             tmpSvg.appendChild(container);
@@ -257,12 +274,13 @@ class TreeBuilder {
         return [width, maxHeight];
     }
 
-    static _nodeRenderer(name, x, y, height, width, extra, id, nodeClass, textClass, textRenderer) {
-        return `<div class="${nodeClass}" id="node${id}"> ${textRenderer(name, extra, textClass)}</div>`;
+    static _nodeRenderer(nodeData, name, x, y, height, width, extra, id, nodeClass, textClass, textRenderer) {
+        return `<div class="${nodeClass}" id="node${id}"> ${textRenderer(nodeData, name, extra, textClass)}</div>`;
     }
 
-    static _textRenderer(name, extra, textClass) {
-        return `<p align="center" class="${textClass}">${name}</p>`;
+    static _textRenderer(nodeData, name, extra, textClass) {
+        console.log('rendering text: ', nodeData)
+        return `<p align="center" class="${textClass}">${name} (${nodeData.id})</p>`;
     }
 
     static _debug(msg) {
@@ -270,7 +288,6 @@ class TreeBuilder {
             console.log(msg);
         }
     }
-
 }
 
 const dTree = {
@@ -288,18 +305,22 @@ const dTree = {
                 nodeHeightSeperation: function (nodeWidth, nodeMaxHeight) {
                     return TreeBuilder._nodeHeightSeperation(nodeWidth, nodeMaxHeight);
                 },
-                nodeRenderer: function (name, x, y, height, width, extra, id, nodeClass, textClass, textRenderer) {
-                    return TreeBuilder._nodeRenderer(name, x, y, height, width, extra,
+                nodeRenderer: function (nodeData, name, x, y, height, width, extra, id, nodeClass, textClass, textRenderer) {
+                    return TreeBuilder._nodeRenderer(nodeData, name, x, y, height, width, extra,
                         id, nodeClass, textClass, textRenderer);
                 },
                 nodeSize: function (nodes, width, textRenderer) {
                     return TreeBuilder._nodeSize(nodes, width, textRenderer);
                 },
-                nodeSorter: function (aName, aExtra, bName, bExtra) {
+                nodeSorter: function (a, b) {
+                    if (!!a.age && !!b.age) {
+                        if (a.age > b.age) return -1; // older on the left
+                        if (a.age < b.age) return 1; // younger on the right
+                    }
                     return 0;
                 },
-                textRenderer: function (name, extra, textClass) {
-                    return TreeBuilder._textRenderer(name, extra, textClass);
+                textRenderer: function (nodeData, name, extra, textClass) {
+                    return TreeBuilder._textRenderer(nodeData, name, extra, textClass);
                 },
             },
             margin: {
@@ -309,6 +330,7 @@ const dTree = {
                 left: 0
             },
             nodeWidth: 100,
+            nodeHeight: 100,
             styles: {
                 node: 'node',
                 linage: 'linage',
@@ -331,38 +353,36 @@ const dTree = {
             name: '',
             id: id++,
             hidden: true,
-            children: []
+            children: [],
+            isRoot: true
         };
+
+        const flattenedNodes = [];
 
         const reconstructTree = function (person, parent) {
 
-            // convert to person to d3 node
-            const node = {
-                name: person.name,
-                id: id++,
-                hidden: false,
-                children: [],
-                extra: person.extra,
-                textClass: person.textClass ? person.textClass : opts.styles.text,
-                class: person.class ? person.class : opts.styles.node
-            };
+            // find the node in existing nodes
+            let node = person.id ? flattenedNodes.find(_ => _.id === person.id) : null;
 
-            // hide linages to the hidden root node
-            if (parent === root) {
-                node.noParent = true;
-            }
+            let nodeAlreadyExists = node !== null;
 
-            // apply depth offset
-            for (let i = 0; i < person.depthOffset; i++) {
-                const pushNode = {
-                    name: '',
-                    id: id++,
-                    hidden: true,
+            // create node if not exists
+            if (!nodeAlreadyExists) {
+                node = {
+                    name: person.name,
+                    id: person.id ?? id++,
+                    hidden: false,
                     children: [],
-                    noParent: node.noParent
+                    extra: person.extra,
+                    textClass: person.textClass ? person.textClass : opts.styles.text,
+                    class: person.class ? person.class : opts.styles.node
                 };
-                parent.children.push(pushNode);
-                parent = pushNode;
+
+                // hide linages to the hidden root node
+                if (parent === root) {
+                    node.noParent = true;
+                }
+                flattenedNodes.push(node);
             }
 
             // sort children
@@ -375,43 +395,57 @@ const dTree = {
                 });
             }
 
-            parent.children.push(node);
+            if (!nodeAlreadyExists) {
+                parent.children.push(node);
+            }
 
             //sort marriages
             dTree._sortMarriages(person.marriages, opts);
 
             // go through marriage
-
             if (person.marriages) {
                 person.marriages.forEach((marriage, index) => {
-                    const m = {
+                    console.log('marriage: ', marriage);
+                    const marriageNode = {
                         name: '',
                         id: id++,
                         hidden: true,
                         noParent: true,
                         children: [],
-                        extra: marriage.extra
+                        extra: marriage.extra,
+                        isMarriageNode: true
                     };
 
                     const sp = marriage.spouse;
 
-                    const spouse = {
-                        name: sp.name,
-                        id: id++,
-                        hidden: false,
-                        noParent: true,
-                        children: [],
-                        textClass: sp.textClass ? sp.textClass : opts.styles.text,
-                        class: sp.class ? sp.class : opts.styles.node,
-                        extra: sp.extra,
-                        marriageNode: m
-                    };
+                    sp.marriage = marriage;
 
-                    parent.children.push(m, spouse);
+                    let spouseNode = sp.id ? flattenedNodes.find(_ => _.id === sp.id) : null;
+
+                    if (!spouseNode) {
+                        spouseNode = {
+                            name: sp.name,
+                            id: sp.id ?? id++,
+                            hidden: false,
+                            noParent: true,
+                            children: [],
+                            textClass: sp.textClass ? sp.textClass : opts.styles.text,
+                            class: sp.class ? sp.class : opts.styles.node,
+                            extra: sp.extra,
+                            marriageNode: marriageNode
+                        };
+
+                        flattenedNodes.push(spouseNode);
+                        parent.children.push(marriageNode, spouseNode);
+                    } else {
+                        spouseNode.marriageNode = marriageNode;
+                        parent.children.push(marriageNode);
+                    }
 
                     dTree._sortPersons(marriage.children, opts);
                     marriage.children.forEach((child) => {
-                        reconstructTree(child, m);
+                        console.log('marriage: ', marriage, ', child: ', child);
+                        reconstructTree(child, marriageNode);
                     });
 
                     siblings.push({
@@ -419,7 +453,7 @@ const dTree = {
                             id: node.id
                         },
                         target: {
-                            id: spouse.id
+                            id: spouseNode.id
                         },
                         number: index
                     });
@@ -431,29 +465,33 @@ const dTree = {
             reconstructTree(person, root);
         });
 
-        return {
+        const constructResult = {
             root: d3.hierarchy(root),
             siblings: siblings
         };
+
+        console.log('construct result: ', _.cloneDeep(constructResult));
+
+        return constructResult;
 
     },
 
     _sortPersons: function (persons, opts) {
         if (persons !== undefined) {
             persons.sort((a, b) => {
-                return opts.callbacks.nodeSorter(a.name, a.extra, b.name, b.extra);
+                return opts.callbacks.nodeSorter(a, b);
             });
         }
         return persons;
     },
 
     _sortMarriages: function (marriages, opts) {
-        console.log('marriages: ', marriages);
         if (marriages !== undefined && Array.isArray(marriages)) {
             marriages.sort((marriageA, marriageB) => {
                 const a = marriageA.spouse;
                 const b = marriageB.spouse;
-                return opts.callbacks.nodeSorter(a.name, a.extra, b.name, b.extra);
+
+                return opts.callbacks.nodeSorter(a, b);
             });
         }
         return marriages;

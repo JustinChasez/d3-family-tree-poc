@@ -1,5 +1,24 @@
 [
   {
+    "name": "Paternal Grandmother",
+    "class": "woman",
+    "marriages": [
+      {
+        "spouse": {
+          "name": "Paternal Grandfather",
+          "class": "man"
+        },
+        "children": [
+          {
+            "name": "Father",
+            "class": "man",
+            "id": 200
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "Grandmother",
     "class": "woman",
     "textClass": "emphasis",
@@ -14,31 +33,6 @@
         },
         "children": [
           {
-            "name": "Mother",
-            "class": "woman",
-            "marriages": [
-              {
-                "spouse": {
-                  "name": "Father",
-                  "class": "man"
-                },
-                "children": [
-                  {
-                    "name": "Patient Node",
-                    "class": "woman"
-                  },
-                  {
-                    "name": "Patient Siblings",
-                    "class": "woman"
-                  },
-                  {
-                    "name": "Patient Siblings",
-                    "class": "woman"
-                  }
-                ]
-              }
-            ]
-          }, {
             "name": "Aunt",
             "class": "woman",
             "marriages": [
@@ -59,7 +53,48 @@
                 ]
               }
             ]
-          }, {
+          },
+          {
+            "name": "Mother",
+            "class": "woman",
+            "marriages": [
+              {
+                "spouse": {
+                  "name": "Divorced Husband",
+                  "class": "man",
+                  "id": 22
+                },
+                "children": [
+                  {
+                    "name": "Half Sister",
+                    "class": "woman"
+                  }
+                ]
+              },
+              {
+                "spouse": {
+                  "name": "Father",
+                  "class": "man",
+                  "id": 200
+                },
+                "children": [
+                  {
+                    "name": "Patient Node",
+                    "class": "woman"
+                  },
+                  {
+                    "name": "Patient Siblings",
+                    "class": "woman"
+                  },
+                  {
+                    "name": "Patient Siblings",
+                    "class": "woman"
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "name": "Aunt 2",
             "class": "woman",
             "marriages": [
