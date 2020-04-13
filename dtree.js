@@ -12,12 +12,12 @@ class TreeBuilder {
         // Calculate node size
         let visibleNodes = this.allNodes.filter((n) => !n.hidden);
 
-        this.nodeSize = opts.callbacks.nodeSize(visibleNodes, opts.nodeWidth, opts.callbacks.textRenderer);
+        this.nodeSize = opts.callbacks.nodeSize(visibleNodes, opts.nodeWidth, opts.nodeHeight, opts.callbacks.textRenderer);
+        console.log('this.nodeSize: ', this.nodeSize);
     }
 
     create() {
         let opts = this.opts;
-        let allNodes = this.allNodes;
         let nodeSize = this.nodeSize;
 
         let width = opts.width + opts.margin.left + opts.margin.right;
@@ -38,9 +38,10 @@ class TreeBuilder {
             .attr('transform', 'translate(' + width / 2 + ',' + opts.margin.top + ')');
 
         // Compute the layout.
-        this.tree = d3.tree().nodeSize([nodeSize[0] * 2, opts.callbacks.nodeHeightSeperation(nodeSize[0], nodeSize[1])]);
+        this.tree = d3.tree().nodeSize([nodeSize[0] * 2, nodeSize[1] * 2]);
 
-        this.tree.separation(function separation(a, b) {
+        this.tree.separation((a, b) => {
+            console.log('separation: ', _.cloneDeep(a), _.cloneDeep(b));
             if (a.data.hidden || b.data.hidden) {
                 return 0.3;
             } else {
@@ -61,13 +62,15 @@ class TreeBuilder {
         let links = treenodes.links();
 
         // Create the link lines.
-        this.svg.selectAll('.link').data(links).enter()
+        this.svg.selectAll('.link')
+            .data(links)
+            .enter()
             // filter links with no parents to prevent empty nodes
-            .filter(function (l) {
-                return !l.target.data.noParent;
-            })
+            // .filter(l => !l.target.data.noParent)
             .append('path')
-            .attr('class', opts.styles.linage)
+            .attr('class', function (d) {
+                return opts.styles.linage + ' ' + d.source.data.name.toLowerCase().replace(/ /g, '_') + '-' + d.target.data.name.toLowerCase().replace(/ /g, '_');
+            })
             .attr('d', this._elbow);
 
         let nodes = this.svg.selectAll('.node').data(treenodes.descendants()).enter();
@@ -76,17 +79,22 @@ class TreeBuilder {
 
         // Draw siblings (marriage)
         this.svg.selectAll('.sibling')
-            .data(this.siblings).enter()
+            .data(this.siblings)
+            .enter()
             .append('path')
-            .attr('class', opts.styles.marriage)
+            .attr('class', function (d) {
+                const isDivorced = d.source.marriageNode.data.divorced ||
+                    d.target.marriageNode.data.divorced;
+
+                return opts.styles.marriage + ` ${isDivorced ? ' divorced-marriage' : ''}`;
+            })
             .attr('d', _.bind(this._siblingLine, this));
 
         // Create the node rectangles.
         nodes.append('foreignObject')
-            .filter(function (d) {
-                return d.data.hidden ? false : true;
-            })
+            .filter(d => !d.data.hidden)
             .attr('x', function (d) {
+                console.log(`drawing node: ${d.data.name}`, d);
                 return Math.round(d.x - d.cWidth / 2) + 'px';
             })
             .attr('y', function (d) {
@@ -110,7 +118,7 @@ class TreeBuilder {
                     nodeSize[1],
                     d.data.extra,
                     d.data.id,
-                    d.data.class,
+                    d.data.className,
                     d.data.textClass,
                     opts.callbacks.textRenderer);
             })
@@ -137,15 +145,14 @@ class TreeBuilder {
             if (node.children) {
                 node.children.forEach(recurse);
             }
-
-            if (!node.id) {
-                node.id = ++i;
-            }
+            //
+            // if (!node.id) {
+            //     node.id = ++i;
+            // }
             n.push(node);
         }
 
         recurse(root);
-        console.log('flattened root: ', _.cloneDeep(n));
         return n;
     }
 
@@ -153,47 +160,53 @@ class TreeBuilder {
         if (d.target.data.noParent) {
             return 'M0,0L0,0';
         }
+
         let ny = Math.round(d.target.y + (d.source.y - d.target.y) * 0.50);
 
-        let linedata = [{
-            x: d.target.x,
-            y: d.target.y
-        }, {
-            x: d.target.x,
-            y: ny
-        }, {
-            x: d.source.x,
-            y: d.source.y
-        }];
+        let linedata = [
+            {
+                x: d.target.x,
+                y: d.target.y
+            },
+            {
+                x: d.target.x,
+                y: ny
+            },
+            {
+                x: d.source.x,
+                y: d.source.y
+            }
+        ];
 
         let fun = d3.line().curve(d3.curveStepAfter)
-            .x(function (d) {
-                return d.x;
-            })
-            .y(function (d) {
-                return d.y;
-            });
+            .x(d => d.x)
+            .y(d => d.y);
         return fun(linedata);
     }
 
     _linkSiblings() {
         let allNodes = this.allNodes;
 
-        this.siblings.forEach((d) => {
-            let start = allNodes.filter((v) => d.source.id === v.data.id);
-            let end = allNodes.filter((v) => d.target.id === v.data.id);
+        this.siblings.forEach((sibling) => {
+            let start = allNodes.find((v) => sibling.source.id === v.data.id);
+            let end = allNodes.find((v) => sibling.target.id === v.data.id);
 
-            d.source.x = start[0].x;
-            d.source.y = start[0].y;
-            d.target.x = end[0].x;
-            d.target.y = end[0].y;
+            if (start) {
+                sibling.source.x = start.x;
+                sibling.source.y = start.y;
+            }
 
-            let marriageId = (start[0].data.marriageNode != null ? start[0].data.marriageNode.id : end[0].data.marriageNode.id);
+            if (end) {
+                sibling.target.x = end.x;
+                sibling.target.y = end.y;
+            }
+
+            let marriageId = (start.data.marriageNode != null ? start.data.marriageNode.id : end.data.marriageNode.id);
 
             let marriageNode = allNodes.find((n) => n.data.id === marriageId);
 
-            d.source.marriageNode = marriageNode;
-            d.target.marriageNode = marriageNode;
+            sibling.source.marriageNode = marriageNode;
+            sibling.target.marriageNode = marriageNode;
         });
 
     }
@@ -205,7 +218,7 @@ class TreeBuilder {
 
         // Not first marriage
         if (d.number > 0) {
-            ny -= Math.round(nodeHeight * 8 / 10);
+            ny -= Math.round(nodeHeight * .55 * d.number);
         }
 
         let linedata = [{
@@ -229,44 +242,36 @@ class TreeBuilder {
         }];
 
         let fun = d3.line().curve(d3.curveStepAfter)
-            .x(function (d) {
-                return d.x;
-            })
-            .y(function (d) {
-                return d.y;
-            });
+            .x(d => d.x)
+            .y(d => d.y);
         return fun(linedata);
     }
 
-    static _nodeHeightSeperation(nodeWidth, nodeMaxHeight) {
-        return nodeMaxHeight + 25;
-    }
-
-    static _nodeSize(nodes, width, textRenderer) {
+    static _nodeSize(nodes, width, height, textRenderer) {
         let maxWidth = 0;
-        let maxHeight = 0;
+        let maxHeight = height;
         let tmpSvg = document.createElement('svg');
         document.body.appendChild(tmpSvg);
 
-        _.map(nodes, function (n) {
+        nodes.map(node => {
             let container = document.createElement('div');
-            container.setAttribute('class', n.data.class);
+            container.setAttribute('class', node.data.className);
             container.style.visibility = 'hidden';
             container.style.maxWidth = width + 'px';
 
-            let text = textRenderer(n.data, n.data.name, n.data.extra, n.data.textClass);
+            let text = textRenderer(node.data, node.data.name, node.data.extra, node.data.textClass);
             container.innerHTML = text;
 
             tmpSvg.appendChild(container);
-            let height = 100; // container.offsetHeight;
+            let height = container.getBoundingClientRect().height;
             tmpSvg.removeChild(container);
 
             maxHeight = Math.max(maxHeight, height);
-            n.cHeight = height;
-            if (n.data.hidden) {
-                n.cWidth = 0;
+            node.cHeight = maxHeight;
+            if (node.data.hidden) {
+                node.cWidth = 0;
             } else {
-                n.cWidth = width;
+                node.cWidth = width;
             }
         });
         document.body.removeChild(tmpSvg);
@@ -279,7 +284,6 @@ class TreeBuilder {
     }
 
     static _textRenderer(nodeData, name, extra, textClass) {
-        console.log('rendering text: ', nodeData)
         return `<p align="center" class="${textClass}">${name} (${nodeData.id})</p>`;
     }
 
@@ -302,15 +306,21 @@ const dTree = {
                 },
                 nodeRightClick: function (name, extra, id) {
                 },
-                nodeHeightSeperation: function (nodeWidth, nodeMaxHeight) {
-                    return TreeBuilder._nodeHeightSeperation(nodeWidth, nodeMaxHeight);
-                },
                 nodeRenderer: function (nodeData, name, x, y, height, width, extra, id, nodeClass, textClass, textRenderer) {
-                    return TreeBuilder._nodeRenderer(nodeData, name, x, y, height, width, extra,
-                        id, nodeClass, textClass, textRenderer);
+                    return TreeBuilder._nodeRenderer(nodeData,
+                        name,
+                        x,
+                        y,
+                        height,
+                        width,
+                        extra,
+                        id,
+                        nodeClass,
+                        textClass,
+                        textRenderer);
                 },
-                nodeSize: function (nodes, width, textRenderer) {
-                    return TreeBuilder._nodeSize(nodes, width, textRenderer);
+                nodeSize: function (nodes, width, height, textRenderer) {
+                    return TreeBuilder._nodeSize(nodes, width, height, textRenderer);
                 },
                 nodeSorter: function (a, b) {
                     if (!!a.age && !!b.age) {
@@ -350,7 +360,7 @@ const dTree = {
         let id = 0;
 
         const root = {
-            name: '',
+            name: '--root--',
             id: id++,
             hidden: true,
             children: [],
@@ -359,12 +369,11 @@ const dTree = {
 
         const flattenedNodes = [];
 
-        const reconstructTree = function (person, parent) {
-
+        const reconstructTree = function (person, parentNode, lv = 0) {
             // find the node in existing nodes
             let node = person.id ? flattenedNodes.find(_ => _.id === person.id) : null;
 
-            let nodeAlreadyExists = node !== null;
+            const nodeAlreadyExists = node !== null;
 
             // create node if not exists
             if (!nodeAlreadyExists) {
@@ -375,28 +384,40 @@ const dTree = {
                     children: [],
                     extra: person.extra,
                     textClass: person.textClass ? person.textClass : opts.styles.text,
-                    class: person.class ? person.class : opts.styles.node
+                    className: person.className ? person.className : opts.styles.node
                 };
 
-                // hide linages to the hidden root node
-                if (parent === root) {
-                    node.noParent = true;
-                }
                 flattenedNodes.push(node);
+                person.treeNode = node;
             }
+
+            // hide linages to the hidden root node
+            node.noParent = parentNode === root;
+
+            if (nodeAlreadyExists) {
+                // if the node exists already, check if it was spouse node and it was managed in another branch
+                // if yes then we take it out from the other branch and add to the current one
+                // eg: father is maternal grandparents' son-in-law so it was managed initially under maternal family.
+                // then if we add paternal grandparents, it should be managed under paternal family
+                if (!!person.isSpouse && node.parentNode && node.parentNode.children) {
+                    // take out from original family
+                    node.parentNode.children = _.without(node.parentNode.children, node);
+                }
+            }
+
+            // add it to the current family
+            parentNode.children.push(node);
+            node.parentNode = parentNode;
 
             // sort children
             dTree._sortPersons(person.children, opts);
 
             // add "direct" children
-            if (person.children) {
+            if (person.children && !person.childrenProcessed) { // if the node is duplicated, don't process children nodes again
                 person.children.forEach((child) => {
-                    reconstructTree(child, node);
+                    reconstructTree(child, node, lv + 1); // recursive call
                 });
-            }
-
-            if (!nodeAlreadyExists) {
-                parent.children.push(node);
+                person.childrenProcessed = true;
             }
 
             //sort marriages
@@ -405,24 +426,28 @@ const dTree = {
             // go through marriage
             if (person.marriages) {
                 person.marriages.forEach((marriage, index) => {
-                    console.log('marriage: ', marriage);
                     const marriageNode = {
-                        name: '',
+                        name: 'Marriage Node of ' + person.name,
                         id: id++,
                         hidden: true,
                         noParent: true,
                         children: [],
                         extra: marriage.extra,
-                        isMarriageNode: true
+                        isMarriageNode: true,
+                        divorced: !!marriage.divorced
                     };
 
                     const sp = marriage.spouse;
 
-                    sp.marriage = marriage;
+                    marriageNode.name += ' and ' + sp.name;
+                    sp.isSpouse = true;
+                    sp.divorced = marriage.divorced;
 
+                    // look for the spouse node in the list, it maybe exists due to the other branch's set up
                     let spouseNode = sp.id ? flattenedNodes.find(_ => _.id === sp.id) : null;
-
+                    let spouseNodeAlreadyExists = true;
                     if (!spouseNode) {
+                        spouseNodeAlreadyExists = false;
                         spouseNode = {
                             name: sp.name,
                             id: sp.id ?? id++,
@@ -430,23 +455,43 @@ const dTree = {
                             noParent: true,
                             children: [],
                             textClass: sp.textClass ? sp.textClass : opts.styles.text,
-                            class: sp.class ? sp.class : opts.styles.node,
+                            className: sp.className ? sp.className : opts.styles.node,
                             extra: sp.extra,
-                            marriageNode: marriageNode
+                            isSpouseNode: !!sp.isSpouse
                         };
-
+                        // put to the nodes if not found, so we have only 1 object of the spouse node
                         flattenedNodes.push(spouseNode);
-                        parent.children.push(marriageNode, spouseNode);
                     } else {
-                        spouseNode.marriageNode = marriageNode;
-                        parent.children.push(marriageNode);
+                        // if the spouse found, now it has to have parent linked
+                        if (spouseNode.noParent) {
+                            spouseNode.noParent = false;
+                        }
                     }
 
-                    dTree._sortPersons(marriage.children, opts);
-                    marriage.children.forEach((child) => {
-                        console.log('marriage: ', marriage, ', child: ', child);
-                        reconstructTree(child, marriageNode);
-                    });
+                    if (sp.divorced) {
+                        spouseNode.className += ' divorce-marriage';
+                    }
+
+                    // connect spouse to its partner
+                    spouseNode.marriageNode = marriageNode;
+
+                    if (!spouseNodeAlreadyExists) {
+                        // if the spouse was not in the nodes list, keep track if the parent node,
+                        // as the spouse can be child of another marriage, eg father can be paternal grandparents' child
+                        parentNode.children.push(marriageNode, spouseNode);
+                        spouseNode.parentNode = parentNode;
+                    } else {
+                        // only keep track of the marriage node as the spouse node was managed in the other branch
+                        parentNode.children.push(marriageNode);
+                    }
+
+                    if (marriage.children && marriage.children.length) {
+                        // process the children of that marriage
+                        dTree._sortPersons(marriage.children, opts);
+                        marriage.children.forEach((child) => {
+                            reconstructTree(child, marriageNode, lv + 1);
+                        });
+                    }
 
                     siblings.push({
                         source: {
@@ -469,8 +514,6 @@ const dTree = {
             root: d3.hierarchy(root),
             siblings: siblings
         };
-
-        console.log('construct result: ', _.cloneDeep(constructResult));
 
         return constructResult;
 
