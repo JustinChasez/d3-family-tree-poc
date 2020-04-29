@@ -24,7 +24,7 @@ class TreeBuilder {
         let height = opts.height + opts.margin.top + opts.margin.bottom;
 
         let zoom = d3.zoom()
-            .scaleExtent([0.1, 10])
+            .scaleExtent([0.2, 10])
             .on('zoom', function () {
                 svg.attr('transform', d3.event.transform.translate(width / 2, opts.margin.top));
             });
@@ -37,29 +37,105 @@ class TreeBuilder {
             .call(zoom).append('g')
             .attr('transform', 'translate(' + width / 2 + ',' + opts.margin.top + ')');
 
+        // TODO: add handler for resize window to make responsive
+
         // Compute the layout.
         this.tree = d3.tree().nodeSize([nodeSize[0] * 2, nodeSize[1] * 2]);
-
-        this.tree.separation((a, b) => {
-            console.log('separation: ', _.cloneDeep(a), _.cloneDeep(b));
-            if (a.data.hidden || b.data.hidden) {
-                return 0.3;
-            } else {
-                return 0.6;
-            }
-        });
 
         this._update(this.root);
     }
 
-    _update(source) {
+    _remapTreeNode(currentNode, lv = 0, parentNode = null) {
+        if (currentNode.children && currentNode.children.length) {
+            for (const child of currentNode.children) {
+                this._remapTreeNode(child, lv + 1, currentNode);
+            }
+        }
+        currentNode.data.__treeNode = currentNode;
+    }
 
+    /**
+     * go through each node of the tree and process the position
+     * @param currentNode
+     * @param lv
+     * @param parentNode
+     * @private
+     */
+    _rePositionNodes(currentNode, lv = 0, parentNode = null) {
+        console.log('flattened tree: ', _.sortBy(_.cloneDeep(this.allNodes), ['depth', 'x']));
+
+        let tabs = '';
+        for (let tabCount = 0; tabCount < lv; tabCount++) {
+            tabs += '\t\t';
+        }
+        // process the children first
+        if (currentNode.children && currentNode.children.length) {
+            for (const child of currentNode.children) {
+                this._rePositionNodes(child, lv + 1, currentNode);
+            }
+        }
+
+        // check the deepest elements, they are usually positioned in the correct place.
+
+        // debugging section
+        console.log(`${tabs}* Processing ${currentNode.data.name}, node.x = ${currentNode.x}, node.y = ${currentNode.y}`);
+        console.log(`${tabs}* Node Data: `, _.cloneDeep(currentNode.data));
+
+        if (currentNode.data.isMarriageNode) {
+            let leftMostNode = currentNode.data.spouse;
+            let rightMostNode = currentNode.data.otherSpouse;
+
+            if (leftMostNode.__treeNode.x > currentNode.data.otherSpouse.__treeNode.x) {
+                leftMostNode = currentNode.data.otherSpouse;
+                rightMostNode = currentNode.data.spouse;
+            }
+
+            console.log(`${tabs} Spouse 1 x: ${currentNode.data.spouse.__treeNode.x}`);
+            console.log(`${tabs} Spouse 2 x: ${currentNode.data.otherSpouse.__treeNode.x}`);
+            console.log(`${tabs} Center Node x: ${currentNode.data.__treeNode.x}`);
+
+            leftMostNode.__treeNode.x = currentNode.data.__treeNode.x * 2 - rightMostNode.__treeNode.x;
+        }
+
+        // if the node is main, make it at the center
+        if (currentNode.data.isMainNode) {
+            currentNode.x0 = currentNode.x;
+            currentNode.x = 0;
+
+            // the connected connection should be at center as well
+            parentNode.x0 = parentNode.x;
+            parentNode.x = 0;
+            parentNode.data.__mainNodeLinage = true;
+        }
+
+        if (parentNode) {
+            let siblings = parentNode.children.filter(_ => _ !== currentNode);
+            console.log(`${tabs}* Siblings: `, siblings);
+
+            if (currentNode.data.isMainNode) {
+                const distanceAdjustment = currentNode.x - currentNode.x0;
+                siblings.forEach(_ => _.x += distanceAdjustment);
+            }
+        }
+
+        // when all children are processed, take care of the current currentNode
+
+        // adjust the parent node if needed
+
+        console.log(`${tabs}* Processed ${currentNode.data.name}, node.x = ${currentNode.x}, node.y = ${currentNode.y}`);
+        console.log(`${tabs}* Node Data: `, _.cloneDeep(currentNode.data));
+    }
+
+    _update(source) {
         let opts = this.opts;
-        let allNodes = this.allNodes;
         let nodeSize = this.nodeSize;
 
         let treenodes = this.tree(source);
+
         let links = treenodes.links();
+
+        this._remapTreeNode(treenodes);
+        this._rePositionNodes(treenodes);
 
         // Create the link lines.
         this.svg.selectAll('.link')
@@ -94,7 +170,6 @@ class TreeBuilder {
         nodes.append('foreignObject')
             .filter(d => !d.data.hidden)
             .attr('x', function (d) {
-                console.log(`drawing node: ${d.data.name}`, d);
                 return Math.round(d.x - d.cWidth / 2) + 'px';
             })
             .attr('y', function (d) {
@@ -253,7 +328,7 @@ class TreeBuilder {
         let tmpSvg = document.createElement('svg');
         document.body.appendChild(tmpSvg);
 
-        nodes.map(node => {
+        nodes.forEach(node => {
             let container = document.createElement('div');
             container.setAttribute('class', node.data.className);
             container.style.visibility = 'hidden';
@@ -384,7 +459,8 @@ const dTree = {
                     children: [],
                     extra: person.extra,
                     textClass: person.textClass ? person.textClass : opts.styles.text,
-                    className: person.className ? person.className : opts.styles.node
+                    className: person.className ? person.className : opts.styles.node,
+                    isMainNode: person.isMainNode
                 };
 
                 flattenedNodes.push(node);
@@ -457,8 +533,10 @@ const dTree = {
                             textClass: sp.textClass ? sp.textClass : opts.styles.text,
                             className: sp.className ? sp.className : opts.styles.node,
                             extra: sp.extra,
-                            isSpouseNode: !!sp.isSpouse
+                            isSpouseNode: !!sp.isSpouse,
+                            spouseNode: node
                         };
+                        node.spouseNode = spouseNode;
                         // put to the nodes if not found, so we have only 1 object of the spouse node
                         flattenedNodes.push(spouseNode);
                     } else {
@@ -474,6 +552,9 @@ const dTree = {
 
                     // connect spouse to its partner
                     spouseNode.marriageNode = marriageNode;
+                    spouseNode.spouseNode.marriageNode = marriageNode;
+                    marriageNode.spouse = spouseNode;
+                    marriageNode.otherSpouse = spouseNode.spouseNode;
 
                     if (!spouseNodeAlreadyExists) {
                         // if the spouse was not in the nodes list, keep track if the parent node,

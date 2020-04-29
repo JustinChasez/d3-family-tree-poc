@@ -63,6 +63,7 @@
 <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="dtree.js"></script>
+<script src="dataConversionHelper.js"></script>
 <body>
 <h1>Demo</h1>
 <div id="graph"></div>
@@ -73,8 +74,31 @@
             name: "Father",
             className: "man",
             id: 200,
-            gender: 1
+            gender: 1,
+            // children: [
+            //     {
+            //         name: "Half Sister - Paternal 1",
+            //         className: "woman",
+            //         age: 20,
+            //         gender: 0
+            //     },
+            //     {
+            //         name: "Half Sister - Paternal 2",
+            //         className: "woman",
+            //         age: 20,
+            //         gender: 0
+            //     },
+            // ]
         };
+
+    const patient = {
+        name: "Patient Node",
+        className: "woman",
+        age: 20,
+        gender: 0,
+        isMainNode: true
+    };
+
     const treeData = [
         {
             name: "Grandmother",
@@ -92,87 +116,45 @@
                         }
                     },
                     children: [
-                        // {
-                        //     name: "Aunt",
-                        //     className: "woman",
-                        //     marriages: [
-                        //         {
-                        //             spouse: {
-                        //                 name: "Aunt's Husband",
-                        //                 className: "man"
-                        //             },
-                        //
-                        //             children: [
-                        //                 {
-                        //                     name: "Patient's cousin",
-                        //                     className: "woman"
-                        //                 },
-                        //                 {
-                        //                     name: "Patient's cousin 6",
-                        //                     className: "woman"
-                        //                 }
-                        //             ]
-                        //         }
-                        //     ],
-                        // },
                         {
                             name: "Mother",
                             className: "woman",
                             gender: 0,
                             marriages: [
                                 {
-                                    spouse: {
-                                        name: "Divorced Husband",
-                                        className: "man",
-                                        id: 22
-                                    },
-                                    children: [
-                                        {
-                                            name: "Half Sister",
-                                            className: "woman"
-                                        }
-                                    ],
-                                    divorced: true
-                                },
-                                {
                                     spouse: fatherNode,
                                     // divorced: true,
                                     children: [
-                                        {
-                                            name: "Patient Node",
-                                            className: "woman",
-                                            age: 20,
-                                            gender: 0
-                                        },
+                                        patient,
                                         {
                                             name: "Patient Elder Sister",
                                             className: "woman",
                                             age: 21,
                                             gender: 0
                                         },
-                                        {
-                                            name: "Patient Younger Sister",
-                                            className: "woman",
-                                            age: 17,
-                                            gender: 0
-                                        }
+                                        // {
+                                        //     name: "Patient Younger Sister",
+                                        //     className: "woman",
+                                        //     age: 17,
+                                        //     gender: 0
+                                        // }
                                     ]
                                 }
                             ],
-                            children: [
-                                {
-                                    name: "Half Sister - Maternal 1",
-                                    className: "woman",
-                                    age: 20,
-                                    gender: 0
-                                },
-                                {
-                                    name: "Half Sister - Maternal 2",
-                                    className: "woman",
-                                    age: 20,
-                                    gender: 0
-                                },
-                            ]
+                            // children: [
+                            //     {
+                            //         name: "Half Sister - Maternal 1",
+                            //         className: "woman",
+                            //         age: 20,
+                            //         gender: 0
+                            //     },
+                            //     {
+                            //         name: "Half Sister - Maternal 2",
+                            //         className: "woman",
+                            //         age: 20,
+                            //         gender: 0
+                            //     },
+                            // ]
                         },
                     ]
                 }
@@ -208,12 +190,41 @@
                         // {
                         //     name: "Paternal Aunt 1",
                         //     className: "woman",
-                        //     gender: 0
+                        //     gender: 0,
+                        //     // marriages: [
+                        //     //     {
+                        //     //         spouse: paternalAuntHusband,
+                        //     //         children: [
+                        //     //             {
+                        //     //                 name: 'Paternal Cousin 1',
+                        //     //                 className: 'woman',
+                        //     //                 gender: 0
+                        //     //             }
+                        //     //         ]
+                        //     //     }
+                        //     // ]
                         // },
                     ]
                 }
             ]
-        }
+        },
+        // {
+        //     name: "Paternal Grandmother 2",
+        //     className: "woman",
+        //     gender: 0,
+        //     marriages: [
+        //         {
+        //             spouse: {
+        //                 name: "Paternal Grandfather 2",
+        //                 className: "man",
+        //                 gender: 1
+        //             },
+        //             children: [
+        //                 paternalAuntHusband
+        //             ]
+        //         }
+        //     ]
+        // }
     ];
 
     dTree.init(treeData,
