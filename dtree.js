@@ -62,7 +62,7 @@ class TreeBuilder {
      * @private
      */
     _rePositionNodes(currentNode, lv = 0, parentNode = null) {
-        // return;
+        return;
         let tabs = '';
         for (let tabCount = 0; tabCount < lv; tabCount++) {
             tabs += '\t\t';
@@ -135,7 +135,7 @@ class TreeBuilder {
         let links = treenodes.links();
 
         this._remapTreeNode(treenodes);
-        this._rePositionNodes(treenodes);
+        // this._rePositionNodes(treenodes);
 
         // Create the link lines.
         this.svg.selectAll('.link')
@@ -151,6 +151,7 @@ class TreeBuilder {
 
         let nodes = this.svg.selectAll('.node').data(treenodes.descendants()).enter();
 
+
         this._linkSiblings();
 
         // Draw siblings (marriage)
@@ -159,8 +160,8 @@ class TreeBuilder {
             .enter()
             .append('path')
             .attr('class', function (d) {
-                const isDivorced = d.source.marriageNode.data.divorced ||
-                    d.target.marriageNode.data.divorced;
+                const isDivorced = (d.source.marriageNode && d.source.marriageNode.data.divorced) ||
+                    (d.target.marriageNode && d.target.marriageNode.data.divorced);
 
                 return opts.styles.marriage + ` ${isDivorced ? ' divorced-marriage' : ''}`;
             })
@@ -306,10 +307,10 @@ class TreeBuilder {
             x: Math.round(d.source.x + nodeWidth * 6 / 10),
             y: ny
         }, {
-            x: d.target.marriageNode.x,
+            x: d.target.marriageNode && d.target.marriageNode.x || d.target.x,
             y: ny
         }, {
-            x: d.target.marriageNode.x,
+            x: d.target.marriageNode && d.target.marriageNode.x || d.target.x,
             y: d.target.y
         }, {
             x: d.target.x,
@@ -343,11 +344,12 @@ class TreeBuilder {
 
             maxHeight = Math.max(maxHeight, height);
             node.cHeight = maxHeight;
-            if (node.data.hidden) {
-                node.cWidth = 0;
-            } else {
-                node.cWidth = width;
-            }
+            // if (node.data.hidden) {
+            //     node.cWidth = 0;
+            // } else {
+            //     node.cWidth = width;
+            // }
+            node.cWidth = width;
         });
         document.body.removeChild(tmpSvg);
 
@@ -398,11 +400,11 @@ const dTree = {
                     return TreeBuilder._nodeSize(nodes, width, height, textRenderer);
                 },
                 nodeSorter: function (a, b) {
-                    if (a.marriages && !b.marriages) 
-                        return 1;   
-                    
-                    if (!a.marriages && b.marriages) 
-                        return -1;   
+                    if (a.marriages && !b.marriages)
+                        return 1;
+
+                    if (!a.marriages && b.marriages)
+                        return -1;
 
                     if (!!a.age && !!b.age) {
                         if (a.age > b.age) return -1; // older on the left
@@ -443,12 +445,13 @@ const dTree = {
         const root = {
             name: '--root--',
             id: id++,
-            hidden: true,
+            // hidden: true,
             children: [],
             isRoot: true
         };
 
         const flattenedNodes = [];
+        const pendingInLawNodes = [];
 
         const reconstructTree = function (person, parentNode, lv = 0) {
             // find the node in existing nodes
@@ -511,12 +514,13 @@ const dTree = {
                     const marriageNode = {
                         name: 'Marriage Node of ' + person.name,
                         id: id++,
-                        hidden: true,
+                        //hidden: true,
                         noParent: true,
                         children: [],
                         extra: marriage.extra,
                         isMarriageNode: true,
-                        divorced: !!marriage.divorced
+                        divorced: !!marriage.divorced,
+                        parentNode: parentNode
                     };
 
                     const sp = marriage.spouse;
@@ -563,18 +567,50 @@ const dTree = {
                     marriageNode.otherSpouse = spouseNode.spouseNode;
 
                     if (!spouseNodeAlreadyExists) {
-                        // if the spouse was not in the nodes list, keep track if the parent node,
+                        // if the spouse was not in the nodes list, keep track of the parent node,
                         // as the spouse can be child of another marriage, eg father can be paternal grandparents' child
-                        parentNode.children.push(marriageNode, spouseNode);
                         spouseNode.parentNode = parentNode;
-                    } else {
-                        // only keep track of the marriage node as the spouse node was managed in the other branch
+                    }
+                    // else {
+                    //     // only keep track of the marriage node as the spouse node was managed in the other branch
+                    //     parentNode.children.push(marriageNode);
+                    // }
+                    
+                    let inLawNode;
+                    // keep track of the marriage node outside of parentNode
+                    if (parentNode === root) {
                         parentNode.children.push(marriageNode);
+                    } else {
+                        // look for the in-law node, and append the marriageNode to that in-law node
+                        inLawNode = pendingInLawNodes.find(_ => _.marriageNode === marriageNode);
+
+                        if (!inLawNode) {
+                            inLawNode = {
+                                marriageNode: marriageNode,
+                                children: [marriageNode],
+                                hidden: false,
+                                isRoot: false,
+                                isInlawNode: true,
+                                name: `In-law node of ${marriageNode.name}`,
+                                siblingParentNode: parentNode
+                            };
+                            console.log('inLawNode: ', inLawNode);
+                            pendingInLawNodes.push(inLawNode);
+                        }
+                    }
+                    parentNode.children.push(spouseNode);
+                    if (inLawNode) {                         
+                        if (inLawNode.siblingParentNode.parentNode) {
+                            inLawNode.siblingParentNode.parentNode.children.push(inLawNode);
+
+                            console.log('parentNode isMarriage: ', inLawNode.siblingParentNode.parentNode.isMarriageNode);
+                        }
                     }
 
                     if (marriage.children && marriage.children.length) {
                         // process the children of that marriage
                         dTree._sortPersons(marriage.children, opts);
+                        console.log('sorted children: ', marriage.children);
                         marriage.children.forEach((child) => {
                             reconstructTree(child, marriageNode, lv + 1);
                         });

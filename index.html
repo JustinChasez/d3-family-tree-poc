@@ -64,12 +64,13 @@
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="dtree.js"></script>
 <script src="dataConversionHelper.js"></script>
-<body>
-<h1>Demo</h1>
-<div id="graph"></div>
 
-<script>
-    const fatherNode =
+<body>
+    <h1>Demo</h1>
+    <div id="graph"></div>
+
+    <script>
+        const fatherNode =
         {
             name: "Father",
             className: "man",
@@ -91,170 +92,193 @@
             // ]
         };
 
-    const patient = {
-        name: "Patient Node",
-        className: "woman",
-        age: 20,
-        gender: 0,
-        isMainNode: true
-    };
-
-    const treeData = [
-        {
-            name: "Grandmother",
+        const patient = {
+            name: "Patient Node",
             className: "woman",
+            age: 20,
             gender: 0,
-            textClass: "emphasis",
-            marriages: [
-                {
-                    spouse: {
-                        name: "Grandfather",
-                        className: "man",
-                        gender: 1,
-                        extra: {
-                            nickname: "Illi"
-                        }
-                    },
-                    children: [
-                        {
-                            name: "Mother",
-                            className: "woman",
-                            gender: 0,
-                            age: 45,
-                            marriages: [
-                                {
-                                    spouse: fatherNode,
-                                    // divorced: true,
-                                    children: [
-                                        patient,
-                                        // {
-                                        //     name: "Patient Elder Sister",
-                                        //     className: "woman",
-                                        //     age: 21,
-                                        //     gender: 0
-                                        // },
-                                        // {
-                                        //     name: "Patient Younger Sister",
-                                        //     className: "woman",
-                                        //     age: 17,
-                                        //     gender: 0
-                                        // }
-                                    ]
-                                }
-                            ],
-                            // children: [
-                            //     {
-                            //         name: "Half Sister - Maternal 1",
-                            //         className: "woman",
-                            //         age: 20,
-                            //         gender: 0
-                            //     },
-                            //     {
-                            //         name: "Half Sister - Maternal 2",
-                            //         className: "woman",
-                            //         age: 20,
-                            //         gender: 0
-                            //     },
-                            // ]
-                        },
-                        {
-                            name: "Maternal Aunt 1",
-                            className: "woman",
-                            gender: 0,
-                            age: 59,
-                        },
-                        {
-                            name: "Maternal Aunt 2",
-                            className: "woman",
-                            gender: 0,
-                            age: 42,
-                        }
-                    ]
-                }
-            ],
-            extra: {
-                profileImg: "some profile link here",
-                hasBRCA: true,
-                BRCATest: {
-                    date: "2020-03-07",
-                    result: "negative"
-                }
-            }
-        },
+            isMainNode: true
+        };
 
-        {
-            name: "Paternal Grandmother",
-            className: "woman",
-            gender: 0,
-            marriages: [
-                {
-                    spouse: {
-                        name: "Paternal Grandfather",
-                        className: "man",
-                        gender: 1
-                    },
-                    children: [
-                        fatherNode,
-                        // {
-                        //     name: "Paternal Uncle 1",
-                        //     className: "man",
-                        //     gender: 1
-                        // },
-                        // {
-                        //     name: "Paternal Aunt 1",
-                        //     className: "woman",
-                        //     gender: 0,
-                        //     // marriages: [
-                        //     //     {
-                        //     //         spouse: paternalAuntHusband,
-                        //     //         children: [
-                        //     //             {
-                        //     //                 name: 'Paternal Cousin 1',
-                        //     //                 className: 'woman',
-                        //     //                 gender: 0
-                        //     //             }
-                        //     //         ]
-                        //     //     }
-                        //     // ]
-                        // },
-                    ]
+        const treeData = [
+            {
+                name: "Grandmother",
+                className: "woman",
+                gender: 0,
+                textClass: "emphasis",
+                marriages: [
+                    {
+                        spouse: {
+                            name: "Grandfather",
+                            className: "man",
+                            gender: 1,
+                            extra: {
+                                nickname: "Illi"
+                            }
+                        },
+                        children: [
+                            {
+                                name: "Mother",
+                                className: "woman",
+                                gender: 0,
+                                age: 45,
+                                marriages: [
+                                    {
+                                        spouse: fatherNode,
+                                        // divorced: true,
+                                        children: [
+                                            patient,
+                                            {
+                                                name: "Patient Younger Sister",
+                                                className: "woman",
+                                                // age: 17,
+                                                gender: 0
+                                            },
+                                            {
+                                                name: "Patient Elder Sister",
+                                                className: "woman",
+                                                // age: 21,
+                                                gender: 0,
+                                                marriages: [
+                                                    {
+                                                        spouse: {
+                                                            name: "Brother In-law",
+                                                            className: "man",
+                                                        },
+                                                        children: [
+                                                            {
+                                                                name: "Patient Niece 1",
+                                                                className: "woman",
+                                                                age: 5,
+                                                                gender: 0
+                                                            },
+                                                            {
+                                                                name: "Patient Niece 2",
+                                                                className: "woman",
+                                                                age: 4,
+                                                                gender: 0
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                        ]
+                                    }
+                                ],
+                                children: [
+                                    // {
+                                    //     name: "Half Sister - Maternal 1",
+                                    //     className: "woman",
+                                    //     age: 20,
+                                    //     gender: 0
+                                    // },
+                                    // {
+                                    //     name: "Half Sister - Maternal 2",
+                                    //     className: "woman",
+                                    //     age: 20,
+                                    //     gender: 0
+                                    // },
+                                ]
+                            },
+                            {
+                                name: "Maternal Aunt 1",
+                                className: "woman",
+                                gender: 0,
+                                age: 59,
+                            },
+                            {
+                                name: "Maternal Aunt 2",
+                                className: "woman",
+                                gender: 0,
+                                age: 42,
+                            }
+                        ]
+                    }
+                ],
+                extra: {
+                    profileImg: "some profile link here",
+                    hasBRCA: true,
+                    BRCATest: {
+                        date: "2020-03-07",
+                        result: "negative"
+                    }
                 }
-            ]
-        },
-        // {
-        //     name: "Paternal Grandmother 2",
-        //     className: "woman",
-        //     gender: 0,
-        //     marriages: [
-        //         {
-        //             spouse: {
-        //                 name: "Paternal Grandfather 2",
-        //                 className: "man",
-        //                 gender: 1
-        //             },
-        //             children: [
-        //                 paternalAuntHusband
-        //             ]
-        //         }
-        //     ]
-        // }
-    ];
+            },
 
-    dTree.init(treeData,
-        {
-            target: "#graph",
-            debug: true,
-            height: 800,
-            width: 1200,
-            callbacks: {
-                nodeClick: function (name, extra, nodeId) {
-                    console.log('click: ', name, extra, nodeId);
-                },
-                nodeRightClick: function (name, extra, nodeId) {
-                    console.log('right click: ', name, extra, nodeId);
+            {
+                name: "Paternal Grandmother",
+                className: "woman",
+                gender: 0,
+                marriages: [
+                    {
+                        spouse: {
+                            name: "Paternal Grandfather",
+                            className: "man",
+                            gender: 1
+                        },
+                        children: [
+                            fatherNode,
+                            // {
+                            //     name: "Paternal Uncle 1",
+                            //     className: "man",
+                            //     gender: 1
+                            // },
+                            // {
+                            //     name: "Paternal Aunt 1",
+                            //     className: "woman",
+                            //     gender: 0,
+                            //     // marriages: [
+                            //     //     {
+                            //     //         spouse: paternalAuntHusband,
+                            //     //         children: [
+                            //     //             {
+                            //     //                 name: 'Paternal Cousin 1',
+                            //     //                 className: 'woman',
+                            //     //                 gender: 0
+                            //     //             }
+                            //     //         ]
+                            //     //     }
+                            //     // ]
+                            // },
+                        ]
+                    }
+                ]
+            },
+            // {
+            //     name: "Paternal Grandmother 2",
+            //     className: "woman",
+            //     gender: 0,
+            //     marriages: [
+            //         {
+            //             spouse: {
+            //                 name: "Paternal Grandfather 2",
+            //                 className: "man",
+            //                 gender: 1
+            //             },
+            //             children: [
+            //                 paternalAuntHusband
+            //             ]
+            //         }
+            //     ]
+            // }
+        ];
+
+        dTree.init(treeData,
+            {
+                target: "#graph",
+                debug: true,
+                height: 800,
+                width: 1200,
+                callbacks: {
+                    nodeClick: function (name, extra, nodeId) {
+                        console.log('click: ', name, extra, nodeId);
+                    },
+                    nodeRightClick: function (name, extra, nodeId) {
+                        console.log('right click: ', name, extra, nodeId);
+                    }
                 }
-            }
-        });
-</script>
+            });
+    </script>
 </body>
+
 </html>
