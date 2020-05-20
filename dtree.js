@@ -62,8 +62,7 @@ class TreeBuilder {
      * @private
      */
     _rePositionNodes(currentNode, lv = 0, parentNode = null) {
-        console.log('flattened tree: ', _.sortBy(_.cloneDeep(this.allNodes), ['depth', 'x']));
-
+        // return;
         let tabs = '';
         for (let tabCount = 0; tabCount < lv; tabCount++) {
             tabs += '\t\t';
@@ -114,6 +113,7 @@ class TreeBuilder {
 
             if (currentNode.data.isMainNode) {
                 const distanceAdjustment = currentNode.x - currentNode.x0;
+                console.log('adjusting distance: ', currentNode, distanceAdjustment);
                 siblings.forEach(_ => _.x += distanceAdjustment);
             }
         }
@@ -398,6 +398,12 @@ const dTree = {
                     return TreeBuilder._nodeSize(nodes, width, height, textRenderer);
                 },
                 nodeSorter: function (a, b) {
+                    if (a.marriages && !b.marriages) 
+                        return 1;   
+                    
+                    if (!a.marriages && b.marriages) 
+                        return -1;   
+
                     if (!!a.age && !!b.age) {
                         if (a.age > b.age) return -1; // older on the left
                         if (a.age < b.age) return 1; // younger on the right
