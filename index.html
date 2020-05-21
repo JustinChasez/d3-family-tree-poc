@@ -76,20 +76,20 @@
             className: "man",
             id: 200,
             gender: 1,
-            // children: [
-            //     {
-            //         name: "Half Sister - Paternal 1",
-            //         className: "woman",
-            //         age: 20,
-            //         gender: 0
-            //     },
-            //     {
-            //         name: "Half Sister - Paternal 2",
-            //         className: "woman",
-            //         age: 20,
-            //         gender: 0
-            //     },
-            // ]
+            children: [
+                {
+                    name: "Half Sister - Paternal 1",
+                    className: "woman",
+                    age: 20,
+                    gender: 0
+                },
+                {
+                    name: "Half Sister - Paternal 2",
+                    className: "woman",
+                    age: 20,
+                    gender: 0
+                },
+            ]
         };
 
         const patient = {
@@ -98,6 +98,13 @@
             age: 20,
             gender: 0,
             isMainNode: true
+        };
+
+        const paternalAuntHusband = {
+            name: "paternal aunt husband",
+            className: "man",
+            age: 48,
+            gender: 0
         };
 
         const treeData = [
@@ -124,60 +131,51 @@
                                 age: 45,
                                 marriages: [
                                     {
-                                        spouse: fatherNode,
-                                        // divorced: true,
+                                        spouse: fatherNode,                                        
                                         children: [
+                                            {
+                                                name: "Patient Elder Sister",
+                                                className: "woman",
+                                                age: 21,
+                                                gender: 0,
+                                                children: [
+                                                    {
+                                                        name: "Patient Niece 1",
+                                                        className: "woman",
+                                                        age: 5,
+                                                        gender: 0
+                                                    },
+                                                    {
+                                                        name: "Patient Niece 2",
+                                                        className: "woman",
+                                                        age: 4,
+                                                        gender: 0
+                                                    }
+                                                ]
+                                            },
                                             patient,
                                             {
                                                 name: "Patient Younger Sister",
                                                 className: "woman",
-                                                // age: 17,
+                                                age: 17,
                                                 gender: 0
-                                            },
-                                            {
-                                                name: "Patient Elder Sister",
-                                                className: "woman",
-                                                // age: 21,
-                                                gender: 0,
-                                                marriages: [
-                                                    {
-                                                        spouse: {
-                                                            name: "Brother In-law",
-                                                            className: "man",
-                                                        },
-                                                        children: [
-                                                            {
-                                                                name: "Patient Niece 1",
-                                                                className: "woman",
-                                                                age: 5,
-                                                                gender: 0
-                                                            },
-                                                            {
-                                                                name: "Patient Niece 2",
-                                                                className: "woman",
-                                                                age: 4,
-                                                                gender: 0
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
                                             },
                                         ]
                                     }
                                 ],
                                 children: [
-                                    // {
-                                    //     name: "Half Sister - Maternal 1",
-                                    //     className: "woman",
-                                    //     age: 20,
-                                    //     gender: 0
-                                    // },
-                                    // {
-                                    //     name: "Half Sister - Maternal 2",
-                                    //     className: "woman",
-                                    //     age: 20,
-                                    //     gender: 0
-                                    // },
+                                    {
+                                        name: "Half Sister - Maternal 1",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
+                                    {
+                                        name: "Half Sister - Maternal 2",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
                                 ]
                             },
                             {
@@ -191,6 +189,21 @@
                                 className: "woman",
                                 gender: 0,
                                 age: 42,
+
+                                children: [
+                                    {
+                                        name: "Cousin 1",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
+                                    {
+                                        name: "Cousin 2",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
+                                ]
                             }
                         ]
                     }
@@ -218,28 +231,23 @@
                         },
                         children: [
                             fatherNode,
-                            // {
-                            //     name: "Paternal Uncle 1",
-                            //     className: "man",
-                            //     gender: 1
-                            // },
-                            // {
-                            //     name: "Paternal Aunt 1",
-                            //     className: "woman",
-                            //     gender: 0,
-                            //     // marriages: [
-                            //     //     {
-                            //     //         spouse: paternalAuntHusband,
-                            //     //         children: [
-                            //     //             {
-                            //     //                 name: 'Paternal Cousin 1',
-                            //     //                 className: 'woman',
-                            //     //                 gender: 0
-                            //     //             }
-                            //     //         ]
-                            //     //     }
-                            //     // ]
-                            // },
+                            {
+                                name: "Paternal Uncle 1",
+                                className: "man",
+                                gender: 1
+                            },
+                            {
+                                name: "Paternal Aunt 1",
+                                className: "woman",
+                                gender: 0,
+                                children: [
+                                    {
+                                        name: 'Paternal Cousin 1',
+                                        className: 'woman',
+                                        gender: 0
+                                    }
+                                ]
+                            },
                         ]
                     }
                 ]

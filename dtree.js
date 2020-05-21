@@ -142,7 +142,10 @@ class TreeBuilder {
             .data(links)
             .enter()
             // filter links with no parents to prevent empty nodes
-            // .filter(l => !l.target.data.noParent)
+            .filter(l => {
+                console.log('link hidden: ', l.target.data.hidden);
+                return !l.target.data.noParent && !l.target.data.hidden;
+            })
             .append('path')
             .attr('class', function (d) {
                 return opts.styles.linage + ' ' + d.source.data.name.toLowerCase().replace(/ /g, '_') + '-' + d.target.data.name.toLowerCase().replace(/ /g, '_');
@@ -445,7 +448,7 @@ const dTree = {
         const root = {
             name: '--root--',
             id: id++,
-            // hidden: true,
+            hidden: true,
             children: [],
             isRoot: true
         };
@@ -492,7 +495,10 @@ const dTree = {
 
             // add it to the current family
             parentNode.children.push(node);
-            node.parentNode = parentNode;
+            if (node.parentNode || node.parentNode !== parentNode) {
+                console.log('assigning parent node: ', _.cloneDeep(parentNode));
+                node.parentNode = parentNode;
+            }
 
             // sort children
             dTree._sortPersons(person.children, opts);
@@ -514,7 +520,7 @@ const dTree = {
                     const marriageNode = {
                         name: 'Marriage Node of ' + person.name,
                         id: id++,
-                        //hidden: true,
+                        hidden: true,
                         noParent: true,
                         children: [],
                         extra: marriage.extra,
@@ -575,36 +581,54 @@ const dTree = {
                     //     // only keep track of the marriage node as the spouse node was managed in the other branch
                     //     parentNode.children.push(marriageNode);
                     // }
-                    
+
                     let inLawNode;
                     // keep track of the marriage node outside of parentNode
                     if (parentNode === root) {
+                        // if parent already is root then just add
                         parentNode.children.push(marriageNode);
+                        parentNode.children.push(spouseNode);
                     } else {
+                        // add in-law node to grand-parent node
                         // look for the in-law node, and append the marriageNode to that in-law node
-                        inLawNode = pendingInLawNodes.find(_ => _.marriageNode === marriageNode);
+                        const existingInLawNode = parentNode.isMarriageNode
+                            ? pendingInLawNodes.find(_ => _.marriageNode === parentNode)
+                            : pendingInLawNodes.find(_ => _.marriageNode === marriageNode);
 
-                        if (!inLawNode) {
+                        if (!existingInLawNode) {
                             inLawNode = {
                                 marriageNode: marriageNode,
                                 children: [marriageNode],
-                                hidden: false,
+                                hidden: true,
                                 isRoot: false,
                                 isInlawNode: true,
                                 name: `In-law node of ${marriageNode.name}`,
                                 siblingParentNode: parentNode
                             };
-                            console.log('inLawNode: ', inLawNode);
+                            console.log('inLawNode: ', _.cloneDeep(inLawNode));
                             pendingInLawNodes.push(inLawNode);
+                        } else {
+                            existingInLawNode.children.push({
+                                marriageNode: marriageNode,
+                                children: [marriageNode, spouseNode],
+                                hidden: true,
+                                isRoot: false,
+                                isInlawNode: true,
+                                name: `In-law node of ${marriageNode.name}`,
+                                siblingParentNode: parentNode
+                            });
                         }
                     }
-                    parentNode.children.push(spouseNode);
-                    if (inLawNode) {                         
+                    if (inLawNode) {                        
                         if (inLawNode.siblingParentNode.parentNode) {
                             inLawNode.siblingParentNode.parentNode.children.push(inLawNode);
 
                             console.log('parentNode isMarriage: ', inLawNode.siblingParentNode.parentNode.isMarriageNode);
                         }
+
+                        // if (!node.parentNode.children.find(_ => _ === spouseNode)) {
+                        //     inLawNode.children.push(spouseNode);
+                        // }
                     }
 
                     if (marriage.children && marriage.children.length) {
