@@ -42,6 +42,12 @@ class TreeBuilder {
         // Compute the layout.
         this.tree = d3.tree().nodeSize([nodeSize[0] * 2, nodeSize[1] * 2]);
 
+        this.tree.separation(function separation(a, b) {
+            console.log(a.data)
+            console.log(b.data);
+            return 0.6;
+          });
+
         this._update(this.root);
     }
 
@@ -53,7 +59,6 @@ class TreeBuilder {
         }
         currentNode.data.__treeNode = currentNode;
     }
-
     /**
      * go through each node of the tree and process the position
      * @param currentNode
@@ -62,7 +67,6 @@ class TreeBuilder {
      * @private
      */
     _rePositionNodes(currentNode, lv = 0, parentNode = null) {
-        return;
         let tabs = '';
         for (let tabCount = 0; tabCount < lv; tabCount++) {
             tabs += '\t\t';
@@ -96,34 +100,34 @@ class TreeBuilder {
             leftMostNode.__treeNode.x = currentNode.data.__treeNode.x * 2 - rightMostNode.__treeNode.x;
         }
 
-        // if the node is main, make it at the center
-        if (currentNode.data.isMainNode) {
-            currentNode.x0 = currentNode.x;
-            currentNode.x = 0;
+        // // if the node is main, make it at the center
+        // if (currentNode.data.isMainNode) {
+        //     currentNode.x0 = currentNode.x;
+        //     currentNode.x = 0;
 
-            // the connected connection should be at center as well
-            parentNode.x0 = parentNode.x;
-            parentNode.x = 0;
-            parentNode.data.__mainNodeLinage = true;
-        }
+        //     // the connected connection should be at center as well
+        //     parentNode.x0 = parentNode.x;
+        //     parentNode.x = 0;
+        //     parentNode.data.__mainNodeLinage = true;
+        // }
 
-        if (parentNode) {
-            let siblings = parentNode.children.filter(_ => _ !== currentNode);
-            console.log(`${tabs}* Siblings: `, siblings);
+        // if (parentNode) {
+        //     let siblings = parentNode.children.filter(_ => _ !== currentNode);
+        //     console.log(`${tabs}* Siblings: `, siblings);
 
-            if (currentNode.data.isMainNode) {
-                const distanceAdjustment = currentNode.x - currentNode.x0;
-                console.log('adjusting distance: ', currentNode, distanceAdjustment);
-                siblings.forEach(_ => _.x += distanceAdjustment);
-            }
-        }
+        //     if (currentNode.data.isMainNode) {
+        //         const distanceAdjustment = currentNode.x - currentNode.x0;
+        //         console.log('adjusting distance: ', currentNode, distanceAdjustment);
+        //         siblings.forEach(_ => _.x += distanceAdjustment);
+        //     }
+        // }
 
-        // when all children are processed, take care of the current currentNode
+        // // when all children are processed, take care of the current currentNode
 
-        // adjust the parent node if needed
+        // // adjust the parent node if needed
 
-        console.log(`${tabs}* Processed ${currentNode.data.name}, node.x = ${currentNode.x}, node.y = ${currentNode.y}`);
-        console.log(`${tabs}* Node Data: `, _.cloneDeep(currentNode.data));
+        // console.log(`${tabs}* Processed ${currentNode.data.name}, node.x = ${currentNode.x}, node.y = ${currentNode.y}`);
+        // console.log(`${tabs}* Node Data: `, _.cloneDeep(currentNode.data));
     }
 
     _update(source) {
