@@ -55,8 +55,8 @@
     }
 
     foreignObject div {
-        width: 100px;
-        height: 100px;
+        width: 120px;
+        height: 80px;
     }
 </style>
 
@@ -101,6 +101,18 @@
             isMainNode: true,
 
             children: [
+                {
+                    name: "daughter 1",
+                    className: "woman",
+                    age: 5,
+                    gender: 0
+                },
+                {
+                    name: "daughter 2",
+                    className: "woman",
+                    age: 4,
+                    gender: 0
+                },
             ]
         };
 
@@ -116,12 +128,14 @@
                 name: "Grandmother",
                 className: "woman",
                 gender: 0,
+                fixedPos: true,
                 textClass: "emphasis",
                 marriages: [
                     {
                         spouse: {
                             name: "Grandfather",
                             className: "man",
+                            fixedPos: true,
                             gender: 1,
                             extra: {
                                 nickname: "Illi"
@@ -142,57 +156,57 @@
                                                 className: "woman",
                                                 age: 21,
                                                 gender: 0,
-                                                // children: [
-                                                //     {
-                                                //         name: "daughter 1",
-                                                //         className: "woman",
-                                                //         age: 5,
-                                                //         gender: 0
-                                                //     },
-                                                //     {
-                                                //         name: "daughter 2",
-                                                //         className: "woman",
-                                                //         age: 4,
-                                                //         gender: 0
-                                                //     },
-                                                //     {
-                                                //         name: "daughter 1",
-                                                //         className: "woman",
-                                                //         age: 5,
-                                                //         gender: 0
-                                                //     },
-                                                //     {
-                                                //         name: "daughter 2",
-                                                //         className: "woman",
-                                                //         age: 4,
-                                                //         gender: 0
-                                                //     },
-                                                //     {
-                                                //         name: "daughter 1",
-                                                //         className: "woman",
-                                                //         age: 5,
-                                                //         gender: 0
-                                                //     },
-                                                // ]
+                                                children: [
+                                                    {
+                                                        name: "daughter 1",
+                                                        className: "woman",
+                                                        age: 5,
+                                                        gender: 0
+                                                    },
+                                                    {
+                                                        name: "daughter 2",
+                                                        className: "woman",
+                                                        age: 4,
+                                                        gender: 0
+                                                    },
+                                                    {
+                                                        name: "daughter 1",
+                                                        className: "woman",
+                                                        age: 5,
+                                                        gender: 0
+                                                    },
+                                                    {
+                                                        name: "daughter 2",
+                                                        className: "woman",
+                                                        age: 4,
+                                                        gender: 0
+                                                    },
+                                                    {
+                                                        name: "daughter 1",
+                                                        className: "woman",
+                                                        age: 5,
+                                                        gender: 0
+                                                    },
+                                                ]
                                             },
                                             patient,
                                         ]
                                     }
                                 ],
-                                // children: [
-                                //     {
-                                //         name: "Half Sister - Maternal 1",
-                                //         className: "woman",
-                                //         age: 20,
-                                //         gender: 0
-                                //     },
-                                //     {
-                                //         name: "Half Sister - Maternal 2",
-                                //         className: "woman",
-                                //         age: 20,
-                                //         gender: 0
-                                //     },
-                                // ]
+                                children: [
+                                    {
+                                        name: "Half Sister - Maternal 1",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
+                                    {
+                                        name: "Half Sister - Maternal 2",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
+                                ]
                             },
                             {
                                 name: "Maternal Aunt 1",
@@ -214,27 +228,48 @@
                                     },
                                 ]
                             },
-                            // {
-                            //     name: "Maternal Aunt 2",
-                            //     className: "woman",
-                            //     gender: 0,
-                            //     age: 42,
+                            {
+                                name: "Maternal Aunt 2",
+                                className: "woman",
+                                gender: 0,
+                                age: 42,
 
-                            //     // children: [
-                            //     //     {
-                            //     //         name: "Cousin 1",
-                            //     //         className: "woman",
-                            //     //         age: 20,
-                            //     //         gender: 0
-                            //     //     },
-                            //     //     {
-                            //     //         name: "Cousin 2",
-                            //     //         className: "woman",
-                            //     //         age: 20,
-                            //     //         gender: 0
-                            //     //     },
-                            //     // ]
-                            // }
+                                children: [
+                                    {
+                                        name: "Cousin 1",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
+                                    {
+                                        name: "Cousin 2",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
+                                ]
+                            },
+                            {
+                                name: "Maternal Aunt 3",
+                                className: "woman",
+                                gender: 0,
+                                age: 42,
+
+                                children: [
+                                    {
+                                        name: "Cousin 1",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
+                                    {
+                                        name: "Cousin 2",
+                                        className: "woman",
+                                        age: 20,
+                                        gender: 0
+                                    },
+                                ]
+                            }
                         ]
                     }
                 ],
@@ -251,12 +286,14 @@
             {
                 name: "Paternal Grandmother",
                 className: "woman",
+                fixedPos: true,
                 gender: 0,
                 marriages: [
                     {
                         spouse: {
                             name: "Paternal Grandfather",
                             className: "man",
+                            fixedPos: true,
                             gender: 1
                         },
                         children: [
@@ -307,13 +344,21 @@
                 debug: true,
                 height: 800,
                 width: 1200,
+                nodeHeight: 80,
+                nodeWidth: 120,
                 callbacks: {
                     nodeClick: function (name, extra, nodeId) {
                         console.log('click: ', name, extra, nodeId);
                     },
                     nodeRightClick: function (name, extra, nodeId) {
                         console.log('right click: ', name, extra, nodeId);
-                    }
+                    },
+                    // nodeRenderer: function(nodeData, name, x, y, height, width, extra, id, nodeClass, textClass, textRenderer) {
+
+                    // },
+                    // textRenderer: function(nodeData, name, extra, textClass) {
+                        
+                    // }
                 }
             });
     </script>

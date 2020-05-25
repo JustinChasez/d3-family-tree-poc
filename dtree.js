@@ -46,19 +46,24 @@ class TreeBuilder {
             console.log(a.data)
             console.log(b.data);
             return 0.6;
-          });
+        });
 
         this._update(this.root);
     }
 
-    _remapTreeNode(currentNode, lv = 0, parentNode = null) {
+    _remapTreeNodes(currentNode, parentNode = null) {
+        // process the children first
         if (currentNode.children && currentNode.children.length) {
             for (const child of currentNode.children) {
-                this._remapTreeNode(child, lv + 1, currentNode);
+                this._remapTreeNodes(child, currentNode);
             }
         }
-        currentNode.data.__treeNode = currentNode;
+
+        if (!currentNode.data.__treeNode) {
+            currentNode.data.__treeNode = currentNode;
+        }
     }
+
     /**
      * go through each node of the tree and process the position
      * @param currentNode
@@ -66,68 +71,27 @@ class TreeBuilder {
      * @param parentNode
      * @private
      */
-    _rePositionNodes(currentNode, lv = 0, parentNode = null) {
-        let tabs = '';
-        for (let tabCount = 0; tabCount < lv; tabCount++) {
-            tabs += '\t\t';
-        }
+    _rePositionNodes(currentNode, parentNode = null) {
         // process the children first
         if (currentNode.children && currentNode.children.length) {
             for (const child of currentNode.children) {
-                this._rePositionNodes(child, lv + 1, currentNode);
+                this._rePositionNodes(child, currentNode);
             }
         }
-
-        // check the deepest elements, they are usually positioned in the correct place.
-
-        // debugging section
-        console.log(`${tabs}* Processing ${currentNode.data.name}, node.x = ${currentNode.x}, node.y = ${currentNode.y}`);
-        console.log(`${tabs}* Node Data: `, _.cloneDeep(currentNode.data));
 
         if (currentNode.data.isMarriageNode) {
             let leftMostNode = currentNode.data.spouse;
             let rightMostNode = currentNode.data.otherSpouse;
 
-            if (leftMostNode.__treeNode.x > currentNode.data.otherSpouse.__treeNode.x) {
-                leftMostNode = currentNode.data.otherSpouse;
-                rightMostNode = currentNode.data.spouse;
+            if (leftMostNode.fixedPos && rightMostNode.fixedPos) {
+                const acceptedDistance = this.nodeSize[0] / 2 + 20;
+                leftMostNode.__treeNode.x = currentNode.x - acceptedDistance;
+                rightMostNode.__treeNode.x = currentNode.x + acceptedDistance;
+
+                console.log('leftMostNode x: ', leftMostNode, leftMostNode.__treeNode.x);
+                console.log('rightMostNode x: ', rightMostNode, rightMostNode.__treeNode.x);
             }
-
-            console.log(`${tabs} Spouse 1 x: ${currentNode.data.spouse.__treeNode.x}`);
-            console.log(`${tabs} Spouse 2 x: ${currentNode.data.otherSpouse.__treeNode.x}`);
-            console.log(`${tabs} Center Node x: ${currentNode.data.__treeNode.x}`);
-
-            leftMostNode.__treeNode.x = currentNode.data.__treeNode.x * 2 - rightMostNode.__treeNode.x;
         }
-
-        // // if the node is main, make it at the center
-        // if (currentNode.data.isMainNode) {
-        //     currentNode.x0 = currentNode.x;
-        //     currentNode.x = 0;
-
-        //     // the connected connection should be at center as well
-        //     parentNode.x0 = parentNode.x;
-        //     parentNode.x = 0;
-        //     parentNode.data.__mainNodeLinage = true;
-        // }
-
-        // if (parentNode) {
-        //     let siblings = parentNode.children.filter(_ => _ !== currentNode);
-        //     console.log(`${tabs}* Siblings: `, siblings);
-
-        //     if (currentNode.data.isMainNode) {
-        //         const distanceAdjustment = currentNode.x - currentNode.x0;
-        //         console.log('adjusting distance: ', currentNode, distanceAdjustment);
-        //         siblings.forEach(_ => _.x += distanceAdjustment);
-        //     }
-        // }
-
-        // // when all children are processed, take care of the current currentNode
-
-        // // adjust the parent node if needed
-
-        // console.log(`${tabs}* Processed ${currentNode.data.name}, node.x = ${currentNode.x}, node.y = ${currentNode.y}`);
-        // console.log(`${tabs}* Node Data: `, _.cloneDeep(currentNode.data));
     }
 
     _update(source) {
@@ -138,8 +102,8 @@ class TreeBuilder {
 
         let links = treenodes.links();
 
-        this._remapTreeNode(treenodes);
-        // this._rePositionNodes(treenodes);
+        this._remapTreeNodes(treenodes);
+        this._rePositionNodes(treenodes);
 
         // Create the link lines.
         this.svg.selectAll('.link')
@@ -161,7 +125,7 @@ class TreeBuilder {
 
         this._linkSiblings();
 
-        // Draw siblings (marriage)
+        // Draw marriages connection lines
         this.svg.selectAll('.sibling')
             .data(this.siblings)
             .enter()
@@ -172,7 +136,7 @@ class TreeBuilder {
 
                 return opts.styles.marriage + ` ${isDivorced ? ' divorced-marriage' : ''}`;
             })
-            .attr('d', _.bind(this._siblingLine, this));
+            .attr('d', _.bind(this._marriageLine, this));
 
         // Create the node rectangles.
         nodes.append('foreignObject')
@@ -284,6 +248,14 @@ class TreeBuilder {
                 sibling.target.y = end.y;
             }
 
+            if ((!start && !end) ||
+                (
+                    !start.data.marriageNode &&
+                    !end.data.marriageNode
+                )) {
+                return;
+            }
+
             let marriageId = (start.data.marriageNode != null ? start.data.marriageNode.id : end.data.marriageNode.id);
 
             let marriageNode = allNodes.find((n) => n.data.id === marriageId);
@@ -291,34 +263,12 @@ class TreeBuilder {
             sibling.source.marriageNode = marriageNode;
             sibling.target.marriageNode = marriageNode;
         });
-
     }
 
-    _siblingLine(d, i) {
-        let ny = Math.round(d.target.y + (d.source.y - d.target.y) * 0.50);
-        let nodeWidth = this.nodeSize[0];
-        let nodeHeight = this.nodeSize[1];
-
-        // Not first marriage
-        if (d.number > 0) {
-            ny -= Math.round(nodeHeight * .55 * d.number);
-        }
-
+    _marriageLine(d, i) {
         let linedata = [{
             x: d.source.x,
             y: d.source.y
-        }, {
-            x: Math.round(d.source.x + nodeWidth * 6 / 10),
-            y: d.source.y
-        }, {
-            x: Math.round(d.source.x + nodeWidth * 6 / 10),
-            y: ny
-        }, {
-            x: d.target.marriageNode && d.target.marriageNode.x || d.target.x,
-            y: ny
-        }, {
-            x: d.target.marriageNode && d.target.marriageNode.x || d.target.x,
-            y: d.target.y
         }, {
             x: d.target.x,
             y: d.target.y
@@ -476,7 +426,8 @@ const dTree = {
                     extra: person.extra,
                     textClass: person.textClass ? person.textClass : opts.styles.text,
                     className: person.className ? person.className : opts.styles.node,
-                    isMainNode: person.isMainNode
+                    isMainNode: person.isMainNode,
+                    fixedPos: !!person.fixedPos
                 };
 
                 flattenedNodes.push(node);
@@ -554,7 +505,8 @@ const dTree = {
                             className: sp.className ? sp.className : opts.styles.node,
                             extra: sp.extra,
                             isSpouseNode: !!sp.isSpouse,
-                            spouseNode: node
+                            spouseNode: node,
+                            fixedPos: !!sp.fixedPos
                         };
                         node.spouseNode = spouseNode;
                         // put to the nodes if not found, so we have only 1 object of the spouse node
@@ -623,7 +575,7 @@ const dTree = {
                             });
                         }
                     }
-                    if (inLawNode) {                        
+                    if (inLawNode) {
                         if (inLawNode.siblingParentNode.parentNode) {
                             inLawNode.siblingParentNode.parentNode.children.push(inLawNode);
 
